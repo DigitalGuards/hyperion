@@ -1073,17 +1073,24 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context << Instruction::MULMOD;
 			break;
 		}
+		case FunctionType::Kind::MLDSA87Verify:
+		{
+			hypAssert(arguments.size() == function.parameterTypes().size(), "");
+			for (size_t i = 0; i < arguments.size(); ++i)
+				acceptAndConvert(*arguments[i], *function.parameterTypes()[i]);
+			utils().fetchFreeMemoryPointer();
+			m_context.callYulFunction(m_context.utilFunctions().mldsa87VerifyFunction(), 5, 1);
+			break;
+		}
 		case FunctionType::Kind::DepositRoot:
 		case FunctionType::Kind::SHA256:
 		case FunctionType::Kind::SHAKE256:
-		case FunctionType::Kind::MLDSA87Verify:
 		{
 			_functionCall.expression().accept(*this);
 			static std::map<FunctionType::Kind, u256> const contractAddresses{
 				{FunctionType::Kind::DepositRoot, 1},
 				{FunctionType::Kind::SHA256, 2},
-				{FunctionType::Kind::SHAKE256, 3},
-				{FunctionType::Kind::MLDSA87Verify, 6}
+				{FunctionType::Kind::SHAKE256, 6}
 			};
 			m_context << contractAddresses.at(function.kind());
 			for (unsigned i = function.sizeOnStack(); i > 0; --i)
